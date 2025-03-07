@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cillivation and countries v0.0.1a</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+            background: lightgray;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Kích thước canvas
+        canvas.width = 800;
+        canvas.height = 600;
+
+        // Ảnh nhân vật
+        const images = {
+            default: "MyPic.png",
+            left: "MyPic2.png",
+            right: "MyPic3.png"
+        };
+
+        let currentImage = new Image();
+        currentImage.src = images.default;
+
+        // Vị trí & vận tốc
+        let x = 350, y = 250;
+        let vx = 0, vy = 0;
+        let ax = 0, ay = 0;
+        const acceleration = 0.0033;  // 🔽 Giảm gia tốc thêm 10 lần
+        const friction = 0.9;        // 🛠 Giữ ma sát để mượt mà
+        const maxSpeed = 0.133;      // 🔽 Giảm tốc độ tối đa thêm 10 lần
+
+        const keys = {}; // Lưu trạng thái phím
+
+        // Khi ảnh tải xong, bắt đầu game
+        currentImage.onload = function () {
+            requestAnimationFrame(update);
+        };
+
+        function update() {
+            ax = 0;
+            ay = 0;
+
+            // Xử lý hướng đi
+            if (keys["ArrowUp"] || keys["w"]) ay -= acceleration;
+            if (keys["ArrowDown"] || keys["s"]) ay += acceleration;
+            if (keys["ArrowLeft"] || keys["a"]) {
+                ax -= acceleration;
+                currentImage.src = images.left;
+            }
+            if (keys["ArrowRight"] || keys["d"]) {
+                ax += acceleration;
+                currentImage.src = images.right;
+            }
+
+            // Nếu không nhấn phím trái/phải, quay về ảnh mặc định
+            if (!keys["ArrowLeft"] && !keys["a"] && !keys["ArrowRight"] && !keys["d"]) {
+                currentImage.src = images.default;
+            }
+
+            // Cập nhật vận tốc (thêm ma sát)
+            vx += ax;
+            vy += ay;
+            vx *= friction;
+            vy *= friction;
+
+            // Giới hạn tốc độ tối đa
+            if (Math.abs(vx) < 0.001) vx = 0;
+            if (Math.abs(vy) < 0.001) vy = 0;
+            vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx));
+            vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy));
+
+            // Cập nhật vị trí
+            x += vx;
+            y += vy;
+
+            // Giữ nhân vật trong màn hình
+            x = Math.max(0, Math.min(canvas.width - 100, x));
+            y = Math.max(0, Math.min(canvas.height - 100, y));
+
+            // Vẽ lại canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, x, y, 100, 100);
+
+            // Lặp lại update
+            requestAnimationFrame(update);
+        }
+
+        // Lắng nghe sự kiện phím
+        window.addEventListener("keydown", (event) => {
+            keys[event.key] = true;
+        });
+
+        window.addEventListener("keyup", (event) => {
+            keys[event.key] = false;
+        });
+    </script>
+</body>
+</html>
